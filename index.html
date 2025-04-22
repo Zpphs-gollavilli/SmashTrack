@@ -114,6 +114,10 @@
       <tr><td>Sunday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
     </table>
   </section>
+  <section style="text-align:center;">
+  <button onclick="clearAllData()" style="background:#e74c3c; font-weight:bold;">🗑️ Clear All Data</button>
+  </section>
+
 
   <!-- Weekly Stars System -->
   <section>
@@ -201,6 +205,13 @@
       localStorage.setItem("stars_" + dayIndex, value);
       loadStars();
     }
+    function clearAllData() {
+  if (confirm("Are you sure you want to clear all saved data?")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
 
     // Mistake Tracker
     function saveMistake() {
