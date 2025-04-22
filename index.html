@@ -1,301 +1,384 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8" />
-  <title>🏸 Badminton Pro Tracker</title>
-  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: linear-gradient(to right, #f0f9ff, #fce4ec);
-      margin: 0;
-      padding: 20px;
-    }
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>🏸 Badminton Pro Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2196f3;
+            /* Soft blue */
+            --light-bg: #e3f2fd;
+            /* Light sky blue */
+            --light-accent: #bbdefb;
+            /* Soft blue accent */
+        }
 
-    h1, h2 {
-      font-family: 'Dancing Script', cursive;
-      text-align: center;
-      color: #0077cc;
-    }
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(to right, var(--light-bg), var(--light-accent));
+            margin: 0;
+            padding: 20px;
+        }
 
-    section {
-      background: white;
-      padding: 20px;
-      border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      margin-bottom: 20px;
-    }
+        h1,
+        h2 {
+            font-family: 'Dancing Script', cursive;
+            text-align: center;
+            color: var(--primary);
+        }
 
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
+        section {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+            margin-bottom: 20px;
+            max-width: 900px;
+            margin-left: auto;
+            margin-right: auto;
+        }
 
-    th, td {
-      border: 1px solid #ddd;
-      padding: 8px;
-      text-align: center;
-    }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 16px;
+        }
 
-    th {
-      background: #0077cc;
-      color: white;
-    }
+        th,
+        td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
 
-    td[contenteditable] {
-      background-color: #fefbd8;
-    }
+        th {
+            background: var(--primary);
+            color: white;
+        }
 
-    textarea, input[type="text"], input[type="date"], select {
-      width: 100%;
-      padding: 10px;
-      margin: 6px 0;
-      border-radius: 6px;
-      border: 1px solid #ccc;
-    }
+        td[contenteditable] {
+            background-color: #e1f5fe;
+        }
 
-    button {
-      padding: 10px 16px;
-      margin-top: 10px;
-      border: none;
-      background: #0077cc;
-      color: white;
-      border-radius: 6px;
-      cursor: pointer;
-    }
+        textarea,
+        input[type="text"],
+        input[type="date"],
+        select {
+            width: 100%;
+            padding: 10px;
+            margin: 6px 0;
+            border-radius: 6px;
+            border: 1px solid #90caf9;
+            font-size: 16px;
+        }
 
-    .badge {
-      display: inline-block;
-      padding: 5px 10px;
-      border-radius: 12px;
-      font-size: 12px;
-      margin: 2px;
-      color: white;
-    }
+        button {
+            padding: 10px 16px;
+            margin-top: 10px;
+            border: none;
+            background: var(--primary);
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+        }
 
-    .mistake { background: #e74c3c; }
-    .tip { background: #27ae60; }
-    .goal { background: #f39c12; }
+        .badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 12px;
+            font-size: 12px;
+            margin: 2px;
+            color: white;
+        }
 
-    .star {
-      font-size: 24px;
-      color: gold;
-      cursor: pointer;
-    }
+        .mistake {
+            background: #ef5350;
+        }
 
-    .entry {
-      border-left: 4px solid #0077cc;
-      margin-top: 10px;
-      padding-left: 10px;
-    }
+        .tip {
+            background: #66bb6a;
+        }
 
-    .calendar-list li {
-      margin: 5px 0;
-    }
-  </style>
+        .goal {
+            background: #ffa726;
+        }
+
+        .star {
+            font-size: 24px;
+            color: #ffd700;
+            cursor: pointer;
+        }
+
+        .entry {
+            border-left: 4px solid var(--primary);
+            margin-top: 10px;
+            padding-left: 10px;
+            background-color: #f1f8ff;
+        }
+
+        .calendar-list li {
+            margin: 5px 0;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 28px;
+            }
+
+            h2 {
+                font-size: 22px;
+            }
+
+            table,
+            th,
+            td {
+                font-size: 14px;
+            }
+
+            .star {
+                font-size: 20px;
+            }
+        }
+    </style>
 </head>
+
 <body>
+    <h1>🏸 Badminton Pro Tracker</h1>
 
-  <h1>🏸 Badminton Pro Tracker</h1>
+    <!-- Editable Weekly Timetable -->
+    <section>
+        <h2>📅 Weekly Timetable (Editable)</h2>
+        <table id="timetable-table">
+            <tr>
+                <th>Day</th>
+                <th>Training Plan (Click to Edit)</th>
+            </tr>
+            <tr>
+                <td>Monday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+            <tr>
+                <td>Tuesday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+            <tr>
+                <td>Wednesday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+            <tr>
+                <td>Thursday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+            <tr>
+                <td>Friday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+            <tr>
+                <td>Saturday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+            <tr>
+                <td>Sunday</td>
+                <td contenteditable="true" oninput="saveTimetable()"></td>
+            </tr>
+        </table>
+    </section>
 
-  <!-- Editable Weekly Timetable -->
-  <section>
-    <h2>📅 Weekly Timetable (Editable)</h2>
-    <table id="timetable-table">
-      <tr><th>Day</th><th>Training Plan (Click to Edit)</th></tr>
-      <tr><td>Monday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-      <tr><td>Tuesday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-      <tr><td>Wednesday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-      <tr><td>Thursday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-      <tr><td>Friday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-      <tr><td>Saturday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-      <tr><td>Sunday</td><td contenteditable="true" oninput="saveTimetable()"></td></tr>
-    </table>
-  </section>
+    <!-- Weekly Stars System -->
+    <section>
+        <h2>🌟 Weekly Performance Rating</h2>
+        <table>
+            <tr>
+                <th>Day</th>
+                <th>Stars</th>
+            </tr>
+            <tbody id="stars-body"></tbody>
+        </table>
+    </section>
+
+    <!-- Weekly Progress Chart -->
+    <section>
+        <h2>✅ Weekly Progress Tracker</h2>
+        <div style="text-align:center;">
+            <label><input type="checkbox" id="p0"> Mon </label>
+            <label><input type="checkbox" id="p1"> Tue </label>
+            <label><input type="checkbox" id="p2"> Wed </label>
+            <label><input type="checkbox" id="p3"> Thu </label>
+            <label><input type="checkbox" id="p4"> Fri </label>
+            <label><input type="checkbox" id="p5"> Sat </label>
+            <label><input type="checkbox" id="p6"> Sun </label>
+        </div>
+        <canvas id="progressChart" height="200"></canvas>
+    </section>
+
+    <!-- Mistake Categories with Badges -->
+    <section>
+        <h2>❌ Mistake Tracker with Badges</h2>
+        <select id="mistake-type">
+            <option value="mistake">Mistake</option>
+            <option value="tip">Tip</option>
+            <option value="goal">Goal</option>
+        </select>
+        <textarea id="mistake-input" placeholder="Write note or mistake here..."></textarea>
+        <button onclick="saveMistake()">Save Entry</button>
+        <div id="mistake-log"></div>
+    </section>
+
+    <!-- Tournament Calendar -->
+    <section>
+        <h2>🏆 Tournament Calendar</h2>
+        <input type="date" id="tourney-date">
+        <input type="text" id="tourney-name" placeholder="Tournament Name / Place">
+        <button onclick="addTourney()">Add Tournament</button>
+        <ul id="tourney-list" class="calendar-list"></ul>
+    </section>
+
+    <section style="text-align:center;">
+        <button onclick="clearAllData()" style="background:#e74c3c; font-weight:bold;">🗑️ Clear All Data</button>
+    </section>
 
 
+    <script>
+        const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-  <!-- Weekly Stars System -->
-  <section>
-    <h2>🌟 Weekly Performance Rating</h2>
-    <table>
-      <tr><th>Day</th><th>Stars</th></tr>
-      <tbody id="stars-body"></tbody>
-    </table>
-  </section>
+        // Editable Timetable
+        function saveTimetable() {
+            const rows = document.querySelectorAll('#timetable-table tr');
+            let data = [];
+            rows.forEach((row, i) => {
+                if (i === 0) return;
+                data.push(row.cells[1].innerText);
+            });
+            localStorage.setItem("weekly_timetable", JSON.stringify(data));
+        }
 
-  <!-- Weekly Progress Chart -->
-  <section>
-    <h2>✅ Weekly Progress Tracker</h2>
-    <div style="text-align:center;">
-      <label><input type="checkbox" id="p0"> Mon </label>
-      <label><input type="checkbox" id="p1"> Tue </label>
-      <label><input type="checkbox" id="p2"> Wed </label>
-      <label><input type="checkbox" id="p3"> Thu </label>
-      <label><input type="checkbox" id="p4"> Fri </label>
-      <label><input type="checkbox" id="p5"> Sat </label>
-      <label><input type="checkbox" id="p6"> Sun </label>
-    </div>
-    <canvas id="progressChart" height="200"></canvas>
-  </section>
+        function loadTimetable() {
+            const rows = document.querySelectorAll('#timetable-table tr');
+            const data = JSON.parse(localStorage.getItem("weekly_timetable")) || [];
+            data.forEach((val, i) => {
+                rows[i + 1].cells[1].innerText = val;
+            });
+        }
 
-  <!-- Mistake Categories with Badges -->
-  <section>
-    <h2>❌ Mistake Tracker with Badges</h2>
-    <select id="mistake-type">
-      <option value="mistake">Mistake</option>
-      <option value="tip">Tip</option>
-      <option value="goal">Goal</option>
-    </select>
-    <textarea id="mistake-input" placeholder="Write note or mistake here..."></textarea>
-    <button onclick="saveMistake()">Save Entry</button>
-    <div id="mistake-log"></div>
-  </section>
-
-  <!-- Tournament Calendar -->
-  <section>
-    <h2>🏆 Tournament Calendar</h2>
-    <input type="date" id="tourney-date">
-    <input type="text" id="tourney-name" placeholder="Tournament Name / Place">
-    <button onclick="addTourney()">Add Tournament</button>
-    <ul id="tourney-list" class="calendar-list"></ul>
-  </section>
-  <section style="text-align:center;">
-  <button onclick="clearAllData()" style="background:#e74c3c; font-weight:bold;">🗑️ Clear All Data</button>
-  </section>
-
-
-  <script>
-    const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-
-    // Editable Timetable
-    function saveTimetable() {
-      const rows = document.querySelectorAll('#timetable-table tr');
-      let data = [];
-      rows.forEach((row, i) => {
-        if (i === 0) return;
-        data.push(row.cells[1].innerText);
-      });
-      localStorage.setItem("weekly_timetable", JSON.stringify(data));
-    }
-
-    function loadTimetable() {
-      const rows = document.querySelectorAll('#timetable-table tr');
-      const data = JSON.parse(localStorage.getItem("weekly_timetable")) || [];
-      data.forEach((val, i) => {
-        rows[i+1].cells[1].innerText = val;
-      });
-    }
-
-    // Star Rating
-    function loadStars() {
-      const body = document.getElementById("stars-body");
-      body.innerHTML = "";
-      weekDays.forEach((day, i) => {
-        let val = localStorage.getItem("stars_" + i) || 0;
-        body.innerHTML += `<tr><td>${day}</td>
+        // Star Rating
+        function loadStars() {
+            const body = document.getElementById("stars-body");
+            body.innerHTML = "";
+            weekDays.forEach((day, i) => {
+                let val = localStorage.getItem("stars_" + i) || 0;
+                body.innerHTML += `<tr><td>${day}</td>
           <td>
-            ${[1,2,3,4,5].map(n => `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")}
+            ${[1, 2, 3, 4, 5].map(n => `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")}
             <small> (${val}/5)</small>
           </td></tr>`;
-      });
-    }
-
-    function setStars(dayIndex, value) {
-      localStorage.setItem("stars_" + dayIndex, value);
-      loadStars();
-    }
-    function clearAllData() {
-  if (confirm("Are you sure you want to clear all saved data?")) {
-    localStorage.clear();
-    location.reload();
-  }
-}
-
-
-    // Mistake Tracker
-    function saveMistake() {
-      const type = document.getElementById("mistake-type").value;
-      const note = document.getElementById("mistake-input").value.trim();
-      if (!note) return;
-      const badge = `<span class="badge ${type}">${type.toUpperCase()}</span>`;
-      const timestamp = new Date().toLocaleString();
-      const entry = `<div class="entry">${badge}<br><strong>${timestamp}</strong><br>${note}</div>`;
-      const log = document.getElementById("mistake-log");
-      log.innerHTML = entry + log.innerHTML;
-      localStorage.setItem("mistake_log", log.innerHTML);
-      document.getElementById("mistake-input").value = "";
-    }
-
-    function loadMistakes() {
-      document.getElementById("mistake-log").innerHTML = localStorage.getItem("mistake_log") || "";
-    }
-
-    // Tournament Calendar
-    function addTourney() {
-      const date = document.getElementById("tourney-date").value;
-      const name = document.getElementById("tourney-name").value.trim();
-      if (date && name) {
-        const entry = `<li><strong>${date}</strong> – ${name}</li>`;
-        const list = document.getElementById("tourney-list");
-        list.innerHTML += entry;
-        localStorage.setItem("tourney_list", list.innerHTML);
-        document.getElementById("tourney-name").value = "";
-      }
-    }
-
-    function loadTourneys() {
-      document.getElementById("tourney-list").innerHTML = localStorage.getItem("tourney_list") || "";
-    }
-
-    // Progress Chart
-    const progressData = JSON.parse(localStorage.getItem("progressData")) || [0,0,0,0,0,0,0];
-    const ctx = document.getElementById("progressChart").getContext("2d");
-    const progressChart = new Chart(ctx, {
-      type: 'bar',
-      data: {
-        labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-        datasets: [{
-          label: "Completed",
-          data: progressData,
-          backgroundColor: 'rgba(0, 123, 255, 0.6)'
-        }]
-      },
-      options: {
-        scales: {
-          y: {
-            beginAtZero: true,
-            max: 1,
-            ticks: {
-              stepSize: 1,
-              callback: val => val === 1 ? '✅' : ''
-            }
-          }
+            });
         }
-      }
-    });
 
-    // Checkbox Progress
-    [0,1,2,3,4,5,6].forEach(i => {
-      const cb = document.getElementById("p" + i);
-      cb.checked = progressData[i] === 1;
-      cb.addEventListener("change", () => {
-        progressData[i] = cb.checked ? 1 : 0;
-        localStorage.setItem("progressData", JSON.stringify(progressData));
-        progressChart.data.datasets[0].data = progressData;
-        progressChart.update();
-      });
-    });
+        function setStars(dayIndex, value) {
+            localStorage.setItem("stars_" + dayIndex, value);
+            loadStars();
+        }
 
-    // Initial Load
-    window.onload = () => {
-      loadTimetable();
-      loadStars();
-      loadMistakes();
-      loadTourneys();
-    }
-  </script>
+        // Mistake Tracker
+        function saveMistake() {
+            const type = document.getElementById("mistake-type").value;
+            const note = document.getElementById("mistake-input").value.trim();
+            if (!note) return;
+            const badge = `<span class="badge ${type}">${type.toUpperCase()}</span>`;
+            const timestamp = new Date().toLocaleString();
+            const entry = `<div class="entry">${badge}<br><strong>${timestamp}</strong><br>${note}</div>`;
+            const log = document.getElementById("mistake-log");
+            log.innerHTML = entry + log.innerHTML;
+            localStorage.setItem("mistake_log", log.innerHTML);
+            document.getElementById("mistake-input").value = "";
+        }
+
+        function loadMistakes() {
+            document.getElementById("mistake-log").innerHTML = localStorage.getItem("mistake_log") || "";
+        }
+
+        // Tournament Calendar
+        function addTourney() {
+            const date = document.getElementById("tourney-date").value;
+            const name = document.getElementById("tourney-name").value.trim();
+            if (date && name) {
+                const entry = `<li><strong>${date}</strong> – ${name}</li>`;
+                const list = document.getElementById("tourney-list");
+                list.innerHTML += entry;
+                localStorage.setItem("tourney_list", list.innerHTML);
+                document.getElementById("tourney-name").value = "";
+            }
+        }
+
+        function loadTourneys() {
+            document.getElementById("tourney-list").innerHTML = localStorage.getItem("tourney_list") || "";
+        }
+        function clearAllData() {
+            if (confirm("Are you sure you want to clear all saved data?")) {
+                localStorage.clear();
+                location.reload();
+            }
+        }
+
+
+        // Progress Chart
+        const progressData = JSON.parse(localStorage.getItem("progressData")) || [0, 0, 0, 0, 0, 0, 0];
+        const ctx = document.getElementById("progressChart").getContext("2d");
+        const progressChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+                datasets: [{
+                    label: "Completed",
+                    data: progressData,
+                    backgroundColor: 'rgba(0, 123, 255, 0.6)'
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 1,
+                        ticks: {
+                            stepSize: 1,
+                            callback: val => val === 1 ? '✅' : ''
+                        }
+                    }
+                }
+            }
+        });
+
+        // Checkbox Progress
+        [0, 1, 2, 3, 4, 5, 6].forEach(i => {
+            const cb = document.getElementById("p" + i);
+            cb.checked = progressData[i] === 1;
+            cb.addEventListener("change", () => {
+                progressData[i] = cb.checked ? 1 : 0;
+                localStorage.setItem("progressData", JSON.stringify(progressData));
+                progressChart.data.datasets[0].data = progressData;
+                progressChart.update();
+            });
+        });
+
+        // Initial Load
+        window.onload = () => {
+            loadTimetable();
+            loadStars();
+            loadMistakes();
+            loadTourneys();
+        }
+    </script>
+
 </body>
+
 </html>
