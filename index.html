@@ -4,11 +4,14 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🏸 Badminton Pro Tracker</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet">
+    <title>🏸 SmashTrack</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
     <style>
-        :root {
+         :root {
             --primary: #2196f3;
             /* Soft blue */
             --light-bg: #e3f2fd;
@@ -153,8 +156,8 @@
 </head>
 
 <body>
-    <h1>🏸 Badminton Pro Tracker</h1>
-
+    <div id="user-bar" style="text-align:right; margin-bottom:10px; font-weight:bold;"></div>
+    <h1>🏸 SmashTrack</h1>
     <!-- Editable Weekly Timetable -->
     <section>
         <h2>📅 Weekly Timetable (Editable)</h2>
@@ -249,268 +252,97 @@
     <section style="text-align:center;">
         <button onclick="clearAllData()" style="background:#e74c3c; font-weight:bold;">🗑️ Clear All Data</button>
     </section>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+
+
+
     <script>
-
-        const userid = firebase.auth().currentUser.uid;
-        const today = new Date().toISOString().split("T")[0]; // e.g., "2024-04-24"
-
-        const historyRef = db.collection("users").doc(userId).collection("history").doc(today);
-
-        historyRef.set({
-            timetable,
-            stars,
-            progress,
-            mistakeLog,
-            tourneys,
-            backedUpAt: new Date()
-        });
-        firebase.auth().onAuthStateChanged(user => {
-            if (user) {
-                const userId = user.uid;  // ✅ Safe, works only when logged in
-
-                // Now you can use Firestore safely
-                const today = new Date().toISOString().split("T")[0];
-                const historyRef = db.collection("users").doc(userId).collection("history").doc(today);
-
-                historyRef.set({
-                    message: "🔥 Working with the logged-in user",
-                    timestamp: new Date()
-                });
-            } else {
-                alert("❌ User not logged in");
-                // Optionally redirect to login.html
-            }
-        });
-
-
-
-
-        function loadWeeklyReportChart() {
-            db.collection("users").doc("user1").get().then(doc => {
-                let stars = [], progress = [];
-                if (doc.exists) {
-                    stars = doc.data().stars || weekDays.map(() => 0);
-                    progress = doc.data().progress || weekDays.map(() => 0);
-                } else {
-                    stars = weekDays.map((_, i) => Number(localStorage.getItem("stars_" + i) || 0));
-                    progress = JSON.parse(localStorage.getItem("progressData")) || weekDays.map(() => 0);
-                }
-
-                new Chart(document.getElementById("weeklyReportChart").getContext("2d"), {
-                    type: 'bar',
-                    data: {
-                        labels: weekDays,
-                        datasets: [
-                            {
-                                label: 'Stars 🌟',
-                                data: stars,
-                                backgroundColor: 'rgba(255, 193, 7, 0.6)'
-                            },
-                            {
-                                label: 'Completed ✅',
-                                data: progress,
-                                backgroundColor: 'rgba(0, 123, 255, 0.6)'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 5,
-                                ticks: { stepSize: 1 }
-                            }
-                        }
-                    }
-                });
-            }).catch(() => {
-                const stars = weekDays.map((_, i) => Number(localStorage.getItem("stars_" + i) || 0));
-                const progress = JSON.parse(localStorage.getItem("progressData")) || weekDays.map(() => 0);
-
-                new Chart(document.getElementById("weeklyReportChart").getContext("2d"), {
-                    type: 'bar',
-                    data: {
-                        labels: weekDays,
-                        datasets: [
-                            {
-                                label: 'Stars 🌟',
-                                data: stars,
-                                backgroundColor: 'rgba(255, 193, 7, 0.6)'
-                            },
-                            {
-                                label: 'Completed ✅',
-                                data: progress,
-                                backgroundColor: 'rgba(0, 123, 255, 0.6)'
-                            }
-                        ]
-                    },
-                    options: {
-                        responsive: true,
-                        scales: {
-                            y: {
-                                beginAtZero: true,
-                                max: 5,
-                                ticks: { stepSize: 1 }
-                            }
-                        }
-                    }
-                });
-            });
-        }
-
         const firebaseConfig = {
             apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
             authDomain: "smashtrack-92ceb.firebaseapp.com",
             projectId: "smashtrack-92ceb",
             storageBucket: "smashtrack-92ceb.appspot.com",
             messagingSenderId: "740599970049",
-            appId: "1:740599970049:web:a95abf0ae20dab22088300",
-            measurementId: "G-B1X5QGVY71"
+            appId: "1:740599970049:web:a95abf0ae20dab22088300"
         };
 
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
-        const userId = "user1"; // Change to dynamic user ID if auth is added later
         const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+        let userId = "";
 
-        // Save Timetable to localStorage and Firestore
-        function saveTimetable() {
-            const rows = document.querySelectorAll('#timetable-table tr');
-            let data = [];
-            rows.forEach((row, i) => {
-                if (i === 0) return;
-                data.push(row.cells[1].innerText);
-            });
-            localStorage.setItem("weekly_timetable", JSON.stringify(data));
-            db.collection("users").doc(userId).set({ weekly_timetable: data, updatedAt: new Date() }, { merge: true });
-        }
+        firebase.auth().onAuthStateChanged(user => {
+            if (!user) {
+                window.location.href = "login.html";
+            } else {
+                userId = user.uid;
+                document.getElementById("user-bar").innerHTML = `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
+                loadStars();
+                initProgress();
+            }
+        });
 
-        function loadTimetable() {
-            db.collection("users").doc(userId).get().then(doc => {
-                if (doc.exists && doc.data().weekly_timetable) {
-                    const data = doc.data().weekly_timetable;
-                    const rows = document.querySelectorAll('#timetable-table tr');
-                    data.forEach((val, i) => rows[i + 1].cells[1].innerText = val);
-                    localStorage.setItem("weekly_timetable", JSON.stringify(data));
-                } else {
-                    const rows = document.querySelectorAll('#timetable-table tr');
-                    const data = JSON.parse(localStorage.getItem("weekly_timetable")) || [];
-                    data.forEach((val, i) => rows[i + 1].cells[1].innerText = val);
-                }
-            });
-        }
-
-        // Star Rating
         function loadStars() {
-            const body = document.getElementById("stars-body");
-            body.innerHTML = "";
+            const tbody = document.getElementById("stars-body");
+            tbody.innerHTML = "";
             weekDays.forEach((day, i) => {
-                let val = localStorage.getItem("stars_" + i) || 0;
-                body.innerHTML += `<tr><td>${day}</td><td>${[1, 2, 3, 4, 5].map(n => `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")} <small>(${val}/5)</small></td></tr>`;
+                const val = localStorage.getItem("stars_" + i) || 0;
+                tbody.innerHTML += `
+          <tr><td>${day}</td>
+          <td>${[1, 2, 3, 4, 5].map(n =>
+                    `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")}
+            <small> (${val}/5)</small></td></tr>`;
             });
         }
 
-        function setStars(dayIndex, value) {
-            localStorage.setItem("stars_" + dayIndex, value);
+        function setStars(index, value) {
+            localStorage.setItem("stars_" + index, value);
             const stars = weekDays.map((_, i) => localStorage.getItem("stars_" + i) || 0);
-            db.collection("users").doc(userId).set({ stars: stars, updatedAt: new Date() }, { merge: true });
+            db.collection("users").doc(userId).set({ stars, updatedAt: new Date() }, { merge: true });
             loadStars();
         }
 
-        // Mistake Tracker
-        function saveMistake() {
-            const type = document.getElementById("mistake-type").value;
-            const note = document.getElementById("mistake-input").value.trim();
-            if (!note) return;
-            const badge = `<span class="badge ${type}">${type.toUpperCase()}</span>`;
-            const timestamp = new Date().toLocaleString();
-            const entry = `<div class="entry">${badge}<br><strong>${timestamp}</strong><br>${note}</div>`;
-            const log = document.getElementById("mistake-log");
-            log.innerHTML = entry + log.innerHTML;
-            localStorage.setItem("mistake_log", log.innerHTML);
-            db.collection("users").doc(userId).collection("mistakes").add({ type, note, timestamp: new Date() });
-            document.getElementById("mistake-input").value = "";
-        }
-
-        function loadMistakes() {
-            document.getElementById("mistake-log").innerHTML = localStorage.getItem("mistake_log") || "";
-        }
-
-        // Tournament Calendar
-        function addTourney() {
-            const date = document.getElementById("tourney-date").value;
-            const name = document.getElementById("tourney-name").value.trim();
-            if (date && name) {
-                const entry = `<li><strong>${date}</strong> – ${name}</li>`;
-                const list = document.getElementById("tourney-list");
-                list.innerHTML += entry;
-                localStorage.setItem("tourney_list", list.innerHTML);
-                db.collection("users").doc(userId).collection("tournaments").add({ date, name, timestamp: new Date() });
-                document.getElementById("tourney-name").value = "";
-            }
-        }
-
-        function loadTourneys() {
-            document.getElementById("tourney-list").innerHTML = localStorage.getItem("tourney_list") || "";
-        }
-
-        function clearAllData() {
-            if (confirm("Are you sure you want to clear all saved data?")) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-
-        const progressData = JSON.parse(localStorage.getItem("progressData")) || [0, 0, 0, 0, 0, 0, 0];
-        const ctx = document.getElementById("progressChart").getContext("2d");
-        const progressChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: weekDays.map(d => d.slice(0, 3)),
-                datasets: [{
-                    label: "Completed",
-                    data: progressData,
-                    backgroundColor: 'rgba(0, 123, 255, 0.6)'
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        max: 1,
-                        ticks: {
-                            stepSize: 1,
-                            callback: val => val === 1 ? '✅' : ''
+        function initProgress() {
+            const progressData = JSON.parse(localStorage.getItem("progressData")) || [0, 0, 0, 0, 0, 0, 0];
+            const ctx = document.getElementById("progressChart").getContext("2d");
+            const chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: weekDays.map(day => day.slice(0, 3)),
+                    datasets: [{
+                        label: "Completed",
+                        data: progressData,
+                        backgroundColor: 'rgba(0,123,255,0.6)'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 1,
+                            ticks: {
+                                stepSize: 1,
+                                callback: v => v === 1 ? "✅" : ""
+                            }
                         }
                     }
                 }
-            }
-        });
-
-        [0, 1, 2, 3, 4, 5, 6].forEach(i => {
-            const cb = document.getElementById("p" + i);
-            cb.checked = progressData[i] === 1;
-            cb.addEventListener("change", () => {
-                progressData[i] = cb.checked ? 1 : 0;
-                localStorage.setItem("progressData", JSON.stringify(progressData));
-                progressChart.data.datasets[0].data = progressData;
-                progressChart.update();
-                db.collection("users").doc(userId).set({ progress: progressData, updatedAt: new Date() }, { merge: true });
             });
-        });
 
-        window.onload = () => {
-            loadTimetable();
-            loadStars();
-            loadMistakes();
-            loadTourneys();
-        };
+            for (let i = 0; i < 7; i++) {
+                const cb = document.getElementById("p" + i);
+                cb.checked = progressData[i] === 1;
+                cb.addEventListener("change", () => {
+                    progressData[i] = cb.checked ? 1 : 0;
+                    localStorage.setItem("progressData", JSON.stringify(progressData));
+                    chart.data.datasets[0].data = progressData;
+                    chart.update();
+                    db.collection("users").doc(userId).set({ progress: progressData, updatedAt: new Date() }, { merge: true });
+                });
+            }
+        }
     </script>
-
-
 </body>
 
 </html>
