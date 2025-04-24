@@ -273,6 +273,13 @@
 
 
     <script>
+        function clearAllData() {
+  if (confirm("⚠️ Are you sure you want to clear all saved data? This cannot be undone.")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
+
         const firebaseConfig = {
             apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
             authDomain: "smashtrack-92ceb.firebaseapp.com",
