@@ -4,8 +4,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>SmashTrack Login</title>
-  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI&display=swap" rel="stylesheet">
+  <title>SmashTrack Login / Signup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Segoe+UI:wght@600&display=swap" rel="stylesheet">
   <style>
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -28,7 +28,8 @@
     }
 
     h2 {
-      color: #2196f3;
+      color: #1976d2;
+      font-size: 24px;
     }
 
     input {
@@ -43,11 +44,27 @@
     button {
       width: 100%;
       padding: 10px;
-      background: #2196f3;
-      color: white;
+      margin-top: 10px;
       border: none;
       border-radius: 6px;
       font-size: 16px;
+      cursor: pointer;
+    }
+
+    .primary {
+      background: #2196f3;
+      color: white;
+    }
+
+    .google-btn {
+      background: #e53935;
+      color: white;
+    }
+
+    .toggle {
+      margin-top: 10px;
+      color: #1976d2;
+      font-size: 14px;
       cursor: pointer;
     }
 
@@ -60,10 +77,12 @@
 
 <body>
   <div class="container">
-    <h2>🏸 SmashTrack Login</h2>
+    <h2>🎾 SmashTrack Login / Signup</h2>
     <input type="email" id="email" placeholder="Email" />
     <input type="password" id="password" placeholder="Password" />
-    <button onclick="signIn()">Sign In</button>
+    <button class="primary" onclick="handleAuth()">Sign Up</button>
+    <button class="google-btn" onclick="googleSignIn()">Sign In with Google</button>
+    <p class="toggle" onclick="toggleAuth()" id="toggleText">Already have an account? Sign in</p>
     <p class="error" id="error"></p>
   </div>
 
@@ -83,19 +102,42 @@
     firebase.initializeApp(firebaseConfig);
     const auth = firebase.auth();
 
-    function signIn() {
+    let isSignUp = true;
+
+    firebase.auth().onAuthStateChanged(user => {
+      if (user) {
+        window.location.href = "index.html";
+      }
+    });
+
+    function toggleAuth() {
+      isSignUp = !isSignUp;
+      document.querySelector(".primary").textContent = isSignUp ? "Sign Up" : "Sign In";
+      document.getElementById("toggleText").textContent = isSignUp ? "Already have an account? Sign in" : "Don't have an account? Sign up";
+    }
+
+    function handleAuth() {
       const email = document.getElementById("email").value;
       const password = document.getElementById("password").value;
-      const errorElem = document.getElementById("error");
-      errorElem.textContent = "";
+      const error = document.getElementById("error");
+      error.textContent = "";
 
-      auth.signInWithEmailAndPassword(email, password)
-        .then(() => {
-          window.location.href = "index.html"; // redirect after login
-        })
-        .catch(err => {
-          errorElem.textContent = err.message;
-        });
+      if (isSignUp) {
+        auth.createUserWithEmailAndPassword(email, password)
+          .then(() => window.location.href = "index.html")
+          .catch(err => error.textContent = "Firebase: " + err.message);
+      } else {
+        auth.signInWithEmailAndPassword(email, password)
+          .then(() => window.location.href = "index.html")
+          .catch(err => error.textContent = "Firebase: " + err.message);
+      }
+    }
+
+    function googleSignIn() {
+      const provider = new firebase.auth.GoogleAuthProvider();
+      auth.signInWithPopup(provider)
+        .then(() => window.location.href = "index.html")
+        .catch(err => document.getElementById("error").textContent = "Firebase: " + err.message);
     }
   </script>
 </body>
