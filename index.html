@@ -273,103 +273,173 @@
 </section>
 
 
-
-
-
-    <script>
-        function clearAllData() {
+<script>
+function clearAllData() {
   if (confirm("⚠️ Are you sure you want to clear all saved data? This cannot be undone.")) {
     localStorage.clear();
     location.reload();
   }
 }
 
-        const firebaseConfig = {
-            apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
-            authDomain: "smashtrack-92ceb.firebaseapp.com",
-            projectId: "smashtrack-92ceb",
-            storageBucket: "smashtrack-92ceb.appspot.com",
-            messagingSenderId: "740599970049",
-            appId: "1:740599970049:web:a95abf0ae20dab22088300"
-        };
+const firebaseConfig = {
+  apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
+  authDomain: "smashtrack-92ceb.firebaseapp.com",
+  projectId: "smashtrack-92ceb",
+  storageBucket: "smashtrack-92ceb.appspot.com",
+  messagingSenderId: "740599970049",
+  appId: "1:740599970049:web:a95abf0ae20dab22088300"
+};
 
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-        let userId = "";
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
+let userId = "";
 
-        firebase.auth().onAuthStateChanged(user => {
-            if (!user) {
-                window.location.href = "login.html";
-            } else {
-                userId = user.uid;
-                document.getElementById("user-bar").innerHTML = `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
-                loadStars();
-                initProgress();
-            }
-        });
+firebase.auth().onAuthStateChanged(user => {
+  if (!user) {
+    window.location.href = "login.html";
+  } else {
+    userId = user.uid;
+    document.getElementById("user-bar").innerHTML = `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
+    loadStars();
+    initProgress();
+    loadMistakeEntries();
+    loadTournaments();
+  }
+});
 
-        function loadStars() {
-            const tbody = document.getElementById("stars-body");
-            tbody.innerHTML = "";
-            weekDays.forEach((day, i) => {
-                const val = localStorage.getItem("stars_" + i) || 0;
-                tbody.innerHTML += `
-          <tr><td>${day}</td>
-          <td>${[1, 2, 3, 4, 5].map(n =>
-                    `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")}
-            <small> (${val}/5)</small></td></tr>`;
-            });
+// 🌟 Weekly Stars System
+function loadStars() {
+  const tbody = document.getElementById("stars-body");
+  tbody.innerHTML = "";
+  weekDays.forEach((day, i) => {
+    const val = localStorage.getItem("stars_" + i) || 0;
+    tbody.innerHTML += `
+      <tr><td>${day}</td>
+      <td>${[1, 2, 3, 4, 5].map(n =>
+      `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")}
+        <small> (${val}/5)</small></td></tr>`;
+  });
+}
+
+function setStars(index, value) {
+  localStorage.setItem("stars_" + index, value);
+  const stars = weekDays.map((_, i) => localStorage.getItem("stars_" + i) || 0);
+  db.collection("users").doc(userId).set({ stars, updatedAt: new Date() }, { merge: true });
+  loadStars();
+}
+
+// ✅ Progress Tracker
+function initProgress() {
+  const progressData = JSON.parse(localStorage.getItem("progressData")) || [0, 0, 0, 0, 0, 0, 0];
+  const ctx = document.getElementById("progressChart").getContext("2d");
+  const chart = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: weekDays.map(day => day.slice(0, 3)),
+      datasets: [{
+        label: "Completed",
+        data: progressData,
+        backgroundColor: 'rgba(0,123,255,0.6)'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          max: 1,
+          ticks: {
+            stepSize: 1,
+            callback: v => v === 1 ? "✅" : ""
+          }
         }
+      }
+    }
+  });
 
-        function setStars(index, value) {
-            localStorage.setItem("stars_" + index, value);
-            const stars = weekDays.map((_, i) => localStorage.getItem("stars_" + i) || 0);
-            db.collection("users").doc(userId).set({ stars, updatedAt: new Date() }, { merge: true });
-            loadStars();
-        }
+  for (let i = 0; i < 7; i++) {
+    const cb = document.getElementById("p" + i);
+    cb.checked = progressData[i] === 1;
+    cb.addEventListener("change", () => {
+      progressData[i] = cb.checked ? 1 : 0;
+      localStorage.setItem("progressData", JSON.stringify(progressData));
+      chart.data.datasets[0].data = progressData;
+      chart.update();
+      db.collection("users").doc(userId).set({ progress: progressData, updatedAt: new Date() }, { merge: true });
+    });
+  }
+}
 
-        function initProgress() {
-            const progressData = JSON.parse(localStorage.getItem("progressData")) || [0, 0, 0, 0, 0, 0, 0];
-            const ctx = document.getElementById("progressChart").getContext("2d");
-            const chart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: weekDays.map(day => day.slice(0, 3)),
-                    datasets: [{
-                        label: "Completed",
-                        data: progressData,
-                        backgroundColor: 'rgba(0,123,255,0.6)'
-                    }]
-                },
-                options: {
-                    responsive: true,
-                    scales: {
-                        y: {
-                            beginAtZero: true,
-                            max: 1,
-                            ticks: {
-                                stepSize: 1,
-                                callback: v => v === 1 ? "✅" : ""
-                            }
-                        }
-                    }
-                }
-            });
+// ✅ Mistake Tracker
+function saveMistake() {
+  const type = document.getElementById("mistake-type").value;
+  const text = document.getElementById("mistake-input").value.trim();
 
-            for (let i = 0; i < 7; i++) {
-                const cb = document.getElementById("p" + i);
-                cb.checked = progressData[i] === 1;
-                cb.addEventListener("change", () => {
-                    progressData[i] = cb.checked ? 1 : 0;
-                    localStorage.setItem("progressData", JSON.stringify(progressData));
-                    chart.data.datasets[0].data = progressData;
-                    chart.update();
-                    db.collection("users").doc(userId).set({ progress: progressData, updatedAt: new Date() }, { merge: true });
-                });
-            }
-        }
-    </script>
+  if (!text) {
+    alert("Please enter a note or mistake.");
+    return;
+  }
+
+  const entryDiv = document.createElement("div");
+  entryDiv.classList.add("entry", type);
+  entryDiv.innerHTML = `<span class="badge ${type}">${type.toUpperCase()}</span> ${text}`;
+
+  document.getElementById("mistake-log").appendChild(entryDiv);
+
+  let entries = JSON.parse(localStorage.getItem("mistakeEntries")) || [];
+  entries.push({ type, text });
+  localStorage.setItem("mistakeEntries", JSON.stringify(entries));
+
+  document.getElementById("mistake-input").value = "";
+}
+
+function loadMistakeEntries() {
+  const entries = JSON.parse(localStorage.getItem("mistakeEntries")) || [];
+  const log = document.getElementById("mistake-log");
+  log.innerHTML = "";
+  entries.forEach(entry => {
+    const entryDiv = document.createElement("div");
+    entryDiv.classList.add("entry", entry.type);
+    entryDiv.innerHTML = `<span class="badge ${entry.type}">${entry.type.toUpperCase()}</span> ${entry.text}`;
+    log.appendChild(entryDiv);
+  });
+}
+
+// ✅ Tournament Calendar
+function addTourney() {
+  const date = document.getElementById("tourney-date").value;
+  const name = document.getElementById("tourney-name").value.trim();
+
+  if (!date || !name) {
+    alert("Please enter both date and tournament name.");
+    return;
+  }
+
+  const list = document.getElementById("tourney-list");
+  const item = document.createElement("li");
+  item.textContent = `${date} - ${name}`;
+  list.appendChild(item);
+
+  let tourneys = JSON.parse(localStorage.getItem("tournamentList")) || [];
+  tourneys.push({ date, name });
+  localStorage.setItem("tournamentList", JSON.stringify(tourneys));
+
+  document.getElementById("tourney-date").value = "";
+  document.getElementById("tourney-name").value = "";
+}
+
+function loadTournaments() {
+  const tourneys = JSON.parse(localStorage.getItem("tournamentList")) || [];
+  const list = document.getElementById("tourney-list");
+  list.innerHTML = "";
+  tourneys.forEach(t => {
+    const item = document.createElement("li");
+    item.textContent = `${t.date} - ${t.name}`;
+    list.appendChild(item);
+  });
+}
+</script>
     <footer style="text-align: center; padding: 15px; background: #1976d2; color: white; font-size: 14px; border-radius: 12px 12px 0 0; margin-top: 30px;">
   &copy; 2025 SmashTrack by G.Siddharth. All rights reserved.
 </footer>
