@@ -274,13 +274,6 @@
 
 
 <script>
-function clearAllData() {
-  if (confirm("⚠️ Are you sure you want to clear all saved data? This cannot be undone.")) {
-    localStorage.clear();
-    location.reload();
-  }
-}
-
 const firebaseConfig = {
   apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
   authDomain: "smashtrack-92ceb.firebaseapp.com",
@@ -300,11 +293,14 @@ firebase.auth().onAuthStateChanged(user => {
     window.location.href = "login.html";
   } else {
     userId = user.uid;
-    document.getElementById("user-bar").innerHTML = `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
+    document.getElementById("user-bar").innerHTML =
+      `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
+    
     loadStars();
     initProgress();
     loadMistakeEntries();
     loadTournaments();
+    loadTimetable();
   }
 });
 
@@ -371,75 +367,106 @@ function initProgress() {
   }
 }
 
-// ✅ Mistake Tracker
+// ✅ Timetable - Firestore Sync
+function saveTimetable() {
+  const timetable = {};
+  const rows = document.querySelectorAll("#timetable-table tr");
+  rows.forEach((row, i) => {
+    if (i === 0) return;
+    const day = row.cells[0].innerText.trim();
+    const value = row.cells[1].innerText.trim();
+    timetable[day] = value;
+  });
+  db.collection("users").doc(userId).set({ timetable }, { merge: true });
+}
+
+function loadTimetable() {
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().timetable) {
+      const timetable = doc.data().timetable;
+      const rows = document.querySelectorAll("#timetable-table tr");
+      rows.forEach((row, i) => {
+        if (i === 0) return;
+        const day = row.cells[0].innerText.trim();
+        row.cells[1].innerText = timetable[day] || "";
+      });
+    }
+  });
+}
+
+// ✅ Mistake Tracker - Firestore Sync
 function saveMistake() {
   const type = document.getElementById("mistake-type").value;
   const text = document.getElementById("mistake-input").value.trim();
-
   if (!text) {
     alert("Please enter a note or mistake.");
     return;
   }
-
-  const entryDiv = document.createElement("div");
-  entryDiv.classList.add("entry", type);
-  entryDiv.innerHTML = `<span class="badge ${type}">${type.toUpperCase()}</span> ${text}`;
-
-  document.getElementById("mistake-log").appendChild(entryDiv);
-
-  let entries = JSON.parse(localStorage.getItem("mistakeEntries")) || [];
-  entries.push({ type, text });
-  localStorage.setItem("mistakeEntries", JSON.stringify(entries));
-
-  document.getElementById("mistake-input").value = "";
-}
-
-function loadMistakeEntries() {
-  const entries = JSON.parse(localStorage.getItem("mistakeEntries")) || [];
-  const log = document.getElementById("mistake-log");
-  log.innerHTML = "";
-  entries.forEach(entry => {
-    const entryDiv = document.createElement("div");
-    entryDiv.classList.add("entry", entry.type);
-    entryDiv.innerHTML = `<span class="badge ${entry.type}">${entry.type.toUpperCase()}</span> ${entry.text}`;
-    log.appendChild(entryDiv);
+  const entry = { type, text, timestamp: new Date() };
+  db.collection("users").doc(userId).update({
+    mistakes: firebase.firestore.FieldValue.arrayUnion(entry)
+  }).then(() => {
+    loadMistakeEntries();
+    document.getElementById("mistake-input").value = "";
   });
 }
 
-// ✅ Tournament Calendar
+function loadMistakeEntries() {
+  const log = document.getElementById("mistake-log");
+  log.innerHTML = "";
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().mistakes) {
+      doc.data().mistakes.forEach(entry => {
+        const entryDiv = document.createElement("div");
+        entryDiv.classList.add("entry", entry.type);
+        entryDiv.innerHTML = `<span class="badge ${entry.type}">${entry.type.toUpperCase()}</span> ${entry.text}`;
+        log.appendChild(entryDiv);
+      });
+    }
+  });
+}
+
+// ✅ Tournament Calendar - Firestore Sync
 function addTourney() {
   const date = document.getElementById("tourney-date").value;
   const name = document.getElementById("tourney-name").value.trim();
-
   if (!date || !name) {
     alert("Please enter both date and tournament name.");
     return;
   }
-
-  const list = document.getElementById("tourney-list");
-  const item = document.createElement("li");
-  item.textContent = `${date} - ${name}`;
-  list.appendChild(item);
-
-  let tourneys = JSON.parse(localStorage.getItem("tournamentList")) || [];
-  tourneys.push({ date, name });
-  localStorage.setItem("tournamentList", JSON.stringify(tourneys));
-
-  document.getElementById("tourney-date").value = "";
-  document.getElementById("tourney-name").value = "";
+  const entry = { date, name };
+  db.collection("users").doc(userId).update({
+    tournaments: firebase.firestore.FieldValue.arrayUnion(entry)
+  }).then(() => {
+    loadTournaments();
+    document.getElementById("tourney-date").value = "";
+    document.getElementById("tourney-name").value = "";
+  });
 }
 
 function loadTournaments() {
-  const tourneys = JSON.parse(localStorage.getItem("tournamentList")) || [];
   const list = document.getElementById("tourney-list");
   list.innerHTML = "";
-  tourneys.forEach(t => {
-    const item = document.createElement("li");
-    item.textContent = `${t.date} - ${t.name}`;
-    list.appendChild(item);
+  db.collection("users").doc(userId).get().then(doc => {
+    if (doc.exists && doc.data().tournaments) {
+      doc.data().tournaments.forEach(t => {
+        const item = document.createElement("li");
+        item.textContent = `${t.date} - ${t.name}`;
+        list.appendChild(item);
+      });
+    }
   });
 }
+
+// ✅ Clear All Data - only localStorage (Firestore stays)
+function clearAllData() {
+  if (confirm("⚠️ Are you sure you want to clear all saved local data? This will not delete cloud data.")) {
+    localStorage.clear();
+    location.reload();
+  }
+}
 </script>
+
     <footer style="text-align: center; padding: 15px; background: #1976d2; color: white; font-size: 14px; border-radius: 12px 12px 0 0; margin-top: 30px;">
   &copy; 2025 SmashTrack by G.Siddharth. All rights reserved.
 </footer>
