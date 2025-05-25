@@ -1,487 +1,174 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>🏸 SmashTrack</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet" />
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
-    <style>
-         :root {
-            --primary: #2196f3;
-            /* Soft blue */
-            --light-bg: #e3f2fd;
-            /* Light sky blue */
-            --light-accent: #bbdefb;
-            /* Soft blue accent */
-        }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(to right, var(--light-bg), var(--light-accent));
-            margin: 0;
-            padding: 20px;
-        }
-
-        h1,
-        h2 {
-            font-family: 'Dancing Script', cursive;
-            text-align: center;
-            color: var(--primary);
-        }
-
-        section {
-            background: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-            margin-bottom: 20px;
-            max-width: 900px;
-            margin-left: auto;
-            margin-right: auto;
-        }
-
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 16px;
-        }
-
-        th,
-        td {
-            border: 1px solid #ccc;
-            padding: 10px;
-            text-align: center;
-        }
-
-        th {
-            background: var(--primary);
-            color: white;
-        }
-
-        td[contenteditable] {
-            background-color: #e1f5fe;
-        }
-        footer:hover {
-  background: #0d47a1;
-}
-
-
-        textarea,
-        input[type="text"],
-        input[type="date"],
-        select {
-            width: 100%;
-            padding: 10px;
-            margin: 6px 0;
-            border-radius: 6px;
-            border: 1px solid #90caf9;
-            font-size: 16px;
-        }
-
-        button {
-            padding: 10px 16px;
-            margin-top: 10px;
-            border: none;
-            background: var(--primary);
-            color: white;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 16px;
-        }
-
-        .badge {
-            display: inline-block;
-            padding: 5px 10px;
-            border-radius: 12px;
-            font-size: 12px;
-            margin: 2px;
-            color: white;
-        }
-
-        .mistake {
-            background: #ef5350;
-        }
-
-        .tip {
-            background: #66bb6a;
-        }
-
-        .goal {
-            background: #ffa726;
-        }
-
-        .star {
-            font-size: 24px;
-            color: #ffd700;
-            cursor: pointer;
-        }
-
-        .entry {
-            border-left: 4px solid var(--primary);
-            margin-top: 10px;
-            padding-left: 10px;
-            background-color: #f1f8ff;
-        }
-
-        .calendar-list li {
-            margin: 5px 0;
-        }
-
-        @media (max-width: 600px) {
-            body {
-                padding: 10px;
-            }
-
-            h1 {
-                font-size: 28px;
-            }
-
-            h2 {
-                font-size: 22px;
-            }
-
-            table,
-            th,
-            td {
-                font-size: 14px;
-            }
-
-            .star {
-                font-size: 20px;
-            }
-        }
-    </style>
-</head>
-
-<body>
-    <div id="user-bar" style="text-align:right; margin-bottom:10px; font-weight:bold;"></div>
-    <h1>🏸 SmashTrack</h1>
-    <!-- Editable Weekly Timetable -->
-    <section>
-        <h2>📅 Weekly Timetable (Editable)</h2>
-        <table id="timetable-table">
-            <tr>
-                <th>Day</th>
-                <th>Training Plan (Click to Edit)</th>
-            </tr>
-            <tr>
-                <td>Monday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-            <tr>
-                <td>Tuesday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-            <tr>
-                <td>Wednesday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-            <tr>
-                <td>Thursday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-            <tr>
-                <td>Friday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-            <tr>
-                <td>Saturday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-            <tr>
-                <td>Sunday</td>
-                <td contenteditable="true" oninput="saveTimetable()"></td>
-            </tr>
-        </table>
-    </section>
-
-    <!-- Weekly Stars System -->
-    <section>
-        <h2>🌟 Weekly Performance Rating</h2>
-        <table>
-            <tr>
-                <th>Day</th>
-                <th>Stars</th>
-            </tr>
-            <tbody id="stars-body"></tbody>
-        </table>
-    </section>
-
-    <!-- Weekly Progress Chart -->
-    <section>
-        <h2>✅ Weekly Progress Tracker</h2>
-        <div style="text-align:center;">
-            <label><input type="checkbox" id="p0"> Mon </label>
-            <label><input type="checkbox" id="p1"> Tue </label>
-            <label><input type="checkbox" id="p2"> Wed </label>
-            <label><input type="checkbox" id="p3"> Thu </label>
-            <label><input type="checkbox" id="p4"> Fri </label>
-            <label><input type="checkbox" id="p5"> Sat </label>
-            <label><input type="checkbox" id="p6"> Sun </label>
-        </div>
-        <canvas id="progressChart" height="200"></canvas>
-    </section>
-
-    <!-- Mistake Categories with Badges -->
-    <section>
-        <h2>❌ Mistake Tracker with Badges</h2>
-        <select id="mistake-type">
-            <option value="mistake">Mistake</option>
-            <option value="tip">Tip</option>
-            <option value="goal">Goal</option>
-        </select>
-        <textarea id="mistake-input" placeholder="Write note or mistake here..."></textarea>
-        <button onclick="saveMistake()">Save Entry</button>
-        <div id="mistake-log"></div>
-    </section>
-    <!-- Weekly Report Summary -->
-
-
-
-    <!-- Tournament Calendar -->
-    <section>
-        <h2>🏆 Tournament Calendar</h2>
-        <input type="date" id="tourney-date">
-        <input type="text" id="tourney-name" placeholder="Tournament Name / Place">
-        <button onclick="addTourney()">Add Tournament</button>
-        <ul id="tourney-list" class="calendar-list"></ul>
-    </section>
-
-    <section style="text-align:center; margin-top: 20px;">
-  <button 
-    onclick="clearAllData()" 
-    style="
-      background: #e74c3c; 
-      color: white; 
-      padding: 12px 24px; 
-      font-size: 16px; 
-      border: none; 
-      border-radius: 8px; 
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>🏈 SmashTrack</title>
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script&display=swap" rel="stylesheet" />
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to right, #e3f2fd, #bbdefb);
+      margin: 0;
+      padding: 20px;
+    }
+    h1, h2 {
+      font-family: 'Dancing Script', cursive;
+      text-align: center;
+      color: #2196f3;
+    }
+    section {
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+      margin-bottom: 20px;
+      max-width: 900px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    input, textarea, select, button {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 6px;
+      border: 1px solid #90caf9;
+      font-size: 16px;
+    }
+    button {
+      background: #2196f3;
+      color: white;
+      border: none;
       cursor: pointer;
-      font-weight: bold;
-      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
-    "
-  >
-    🗑️ Clear All Data
-  </button>
-</section>
+    }
+    .entry {
+      border-left: 4px solid #2196f3;
+      margin-top: 10px;
+      padding-left: 10px;
+      background-color: #f1f8ff;
+    }
+    .badge {
+      display: inline-block;
+      padding: 5px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin: 2px;
+      color: white;
+    }
+    .mistake { background: #ef5350; }
+    .tip { background: #66bb6a; }
+    .goal { background: #ffa726; }
+  </style>
+</head>
+<body>
+  <div id="user-bar" style="text-align:right; margin-bottom:10px; font-weight:bold;"></div>
+  <h1>🏈 SmashTrack</h1>
 
+  <section>
+    <h2>❌ Mistake Tracker</h2>
+    <select id="mistake-type">
+      <option value="mistake">Mistake</option>
+      <option value="tip">Tip</option>
+      <option value="goal">Goal</option>
+    </select>
+    <textarea id="mistake-input" placeholder="Write note or mistake here..."></textarea>
+    <button onclick="saveMistake()">Save Entry</button>
+    <div id="mistake-log"></div>
+  </section>
 
+  <section>
+    <h2>🏆 Tournament Calendar</h2>
+    <input type="date" id="tourney-date">
+    <input type="text" id="tourney-name" placeholder="Tournament Name / Place">
+    <button onclick="addTourney()">Add Tournament</button>
+    <ul id="tourney-list"></ul>
+  </section>
 
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
+      authDomain: "smashtrack-92ceb.firebaseapp.com",
+      projectId: "smashtrack-92ceb",
+      storageBucket: "smashtrack-92ceb.appspot.com",
+      messagingSenderId: "740599970049",
+      appId: "1:740599970049:web:a95abf0ae20dab22088300"
+    };
 
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+    let userId = "";
 
-<script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBQQ3KSOdlnByN1mEcszvPd9_M5Y2fMkWU",
-  authDomain: "smashtrack-92ceb.firebaseapp.com",
-  projectId: "smashtrack-92ceb",
-  storageBucket: "smashtrack-92ceb.appspot.com",
-  messagingSenderId: "740599970049",
-  appId: "1:740599970049:web:a95abf0ae20dab22088300"
-};
-
-firebase.initializeApp(firebaseConfig);
-const db = firebase.firestore();
-const weekDays = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
-let userId = "";
-
-firebase.auth().onAuthStateChanged(user => {
-  if (!user) {
-    window.location.href = "login.html";
-  } else {
-    userId = user.uid;
-    document.getElementById("user-bar").innerHTML =
-      `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
-    
-    loadStars();
-    initProgress();
-    loadMistakeEntries();
-    loadTournaments();
-    loadTimetable();
-  }
-});
-
-// 🌟 Weekly Stars System
-function loadStars() {
-  const tbody = document.getElementById("stars-body");
-  tbody.innerHTML = "";
-  weekDays.forEach((day, i) => {
-    const val = localStorage.getItem("stars_" + i) || 0;
-    tbody.innerHTML += `
-      <tr><td>${day}</td>
-      <td>${[1, 2, 3, 4, 5].map(n =>
-      `<span class="star" onclick="setStars(${i},${n})">★</span>`).join("")}
-        <small> (${val}/5)</small></td></tr>`;
-  });
-}
-
-function setStars(index, value) {
-  localStorage.setItem("stars_" + index, value);
-  const stars = weekDays.map((_, i) => localStorage.getItem("stars_" + i) || 0);
-  db.collection("users").doc(userId).set({ stars, updatedAt: new Date() }, { merge: true });
-  loadStars();
-}
-
-// ✅ Progress Tracker
-function initProgress() {
-  const progressData = JSON.parse(localStorage.getItem("progressData")) || [0, 0, 0, 0, 0, 0, 0];
-  const ctx = document.getElementById("progressChart").getContext("2d");
-  const chart = new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: weekDays.map(day => day.slice(0, 3)),
-      datasets: [{
-        label: "Completed",
-        data: progressData,
-        backgroundColor: 'rgba(0,123,255,0.6)'
-      }]
-    },
-    options: {
-      responsive: true,
-      scales: {
-        y: {
-          beginAtZero: true,
-          max: 1,
-          ticks: {
-            stepSize: 1,
-            callback: v => v === 1 ? "✅" : ""
-          }
-        }
+    firebase.auth().onAuthStateChanged(user => {
+      if (!user) {
+        window.location.href = "login.html";
+      } else {
+        userId = user.uid;
+        document.getElementById("user-bar").innerHTML =
+          `👋 ${user.email} <button onclick="firebase.auth().signOut().then(()=>location.href='login.html')">Logout</button>`;
+        loadMistakeEntries();
+        loadTournaments();
       }
-    }
-  });
-
-  for (let i = 0; i < 7; i++) {
-    const cb = document.getElementById("p" + i);
-    cb.checked = progressData[i] === 1;
-    cb.addEventListener("change", () => {
-      progressData[i] = cb.checked ? 1 : 0;
-      localStorage.setItem("progressData", JSON.stringify(progressData));
-      chart.data.datasets[0].data = progressData;
-      chart.update();
-      db.collection("users").doc(userId).set({ progress: progressData, updatedAt: new Date() }, { merge: true });
     });
-  }
-}
 
-// ✅ Timetable - Firestore Sync
-function saveTimetable() {
-  const timetable = {};
-  const rows = document.querySelectorAll("#timetable-table tr");
-  rows.forEach((row, i) => {
-    if (i === 0) return;
-    const day = row.cells[0].innerText.trim();
-    const value = row.cells[1].innerText.trim();
-    timetable[day] = value;
-  });
-  db.collection("users").doc(userId).set({ timetable }, { merge: true });
-}
-
-function loadTimetable() {
-  db.collection("users").doc(userId).get().then(doc => {
-    if (doc.exists && doc.data().timetable) {
-      const timetable = doc.data().timetable;
-      const rows = document.querySelectorAll("#timetable-table tr");
-      rows.forEach((row, i) => {
-        if (i === 0) return;
-        const day = row.cells[0].innerText.trim();
-        row.cells[1].innerText = timetable[day] || "";
+    function saveMistake() {
+      const type = document.getElementById("mistake-type").value;
+      const text = document.getElementById("mistake-input").value.trim();
+      if (!text) return alert("Please enter a note or mistake.");
+      const entry = { type, text, timestamp: new Date() };
+      db.collection("users").doc(userId).set({
+        mistakes: firebase.firestore.FieldValue.arrayUnion(entry)
+      }, { merge: true }).then(() => {
+        loadMistakeEntries();
+        document.getElementById("mistake-input").value = "";
       });
     }
-  });
-}
 
-// ✅ Mistake Tracker - Firestore Sync
-function saveMistake() {
-  const type = document.getElementById("mistake-type").value;
-  const text = document.getElementById("mistake-input").value.trim();
-  if (!text) {
-    alert("Please enter a note or mistake.");
-    return;
-  }
-  const entry = { type, text, timestamp: new Date() };
-  db.collection("users").doc(userId).update({
-    mistakes: firebase.firestore.FieldValue.arrayUnion(entry)
-  }).then(() => {
-    loadMistakeEntries();
-    document.getElementById("mistake-input").value = "";
-  });
-}
-
-function loadMistakeEntries() {
-  const log = document.getElementById("mistake-log");
-  log.innerHTML = "";
-  db.collection("users").doc(userId).get().then(doc => {
-    if (doc.exists && doc.data().mistakes) {
-      doc.data().mistakes.forEach(entry => {
-        const entryDiv = document.createElement("div");
-        entryDiv.classList.add("entry", entry.type);
-        entryDiv.innerHTML = `<span class="badge ${entry.type}">${entry.type.toUpperCase()}</span> ${entry.text}`;
-        log.appendChild(entryDiv);
+    function loadMistakeEntries() {
+      const log = document.getElementById("mistake-log");
+      log.innerHTML = "";
+      db.collection("users").doc(userId).get().then(doc => {
+        if (doc.exists && doc.data().mistakes) {
+          doc.data().mistakes.forEach(entry => {
+            const entryDiv = document.createElement("div");
+            entryDiv.classList.add("entry", entry.type);
+            entryDiv.innerHTML = `<span class="badge ${entry.type}">${entry.type.toUpperCase()}</span> ${entry.text}`;
+            log.appendChild(entryDiv);
+          });
+        }
       });
     }
-  });
-}
 
-// ✅ Tournament Calendar - Firestore Sync
-function addTourney() {
-  const date = document.getElementById("tourney-date").value;
-  const name = document.getElementById("tourney-name").value.trim();
-  if (!date || !name) {
-    alert("Please enter both date and tournament name.");
-    return;
-  }
-  const entry = { date, name };
-  db.collection("users").doc(userId).update({
-    tournaments: firebase.firestore.FieldValue.arrayUnion(entry)
-  }).then(() => {
-    loadTournaments();
-    document.getElementById("tourney-date").value = "";
-    document.getElementById("tourney-name").value = "";
-  });
-}
-
-function loadTournaments() {
-  const list = document.getElementById("tourney-list");
-  list.innerHTML = "";
-  db.collection("users").doc(userId).get().then(doc => {
-    if (doc.exists && doc.data().tournaments) {
-      doc.data().tournaments.forEach(t => {
-        const item = document.createElement("li");
-        item.textContent = `${t.date} - ${t.name}`;
-        list.appendChild(item);
+    function addTourney() {
+      const date = document.getElementById("tourney-date").value;
+      const name = document.getElementById("tourney-name").value.trim();
+      if (!date || !name) return alert("Please enter both date and tournament name.");
+      const entry = { date, name };
+      db.collection("users").doc(userId).set({
+        tournaments: firebase.firestore.FieldValue.arrayUnion(entry)
+      }, { merge: true }).then(() => {
+        loadTournaments();
+        document.getElementById("tourney-date").value = "";
+        document.getElementById("tourney-name").value = "";
       });
     }
-  });
-}
 
-// ✅ Clear All Data - only localStorage (Firestore stays)
-function clearAllData() {
-  if (confirm("⚠️ Are you sure you want to clear all saved local data? This will not delete cloud data.")) {
-    localStorage.clear();
-    location.reload();
-  }
-}
-</script>
-
-    <footer style="text-align: center; padding: 15px; background: #1976d2; color: white; font-size: 14px; border-radius: 12px 12px 0 0; margin-top: 30px;">
-  &copy; 2025 SmashTrack by G.Siddharth. All rights reserved.
-</footer>
-
+    function loadTournaments() {
+      const list = document.getElementById("tourney-list");
+      list.innerHTML = "";
+      db.collection("users").doc(userId).get().then(doc => {
+        if (doc.exists && doc.data().tournaments) {
+          doc.data().tournaments.forEach(t => {
+            const item = document.createElement("li");
+            item.textContent = `${t.date} - ${t.name}`;
+            list.appendChild(item);
+          });
+        }
+      });
+    }
+  </script>
 </body>
-
-</html>
-
-    <footer style="text-align: center; padding: 15px; background: #1976d2; color: white; font-size: 14px; border-radius: 12px 12px 0 0; margin-top: 30px;">
-  &copy; 2025 SmashTrack by G.Siddharth. All rights reserved.
-</footer>
-
-</body>
-
 </html>
